@@ -13,6 +13,7 @@ import android.graphics.Shader.TileMode;
 import android.graphics.Typeface;
 import android.os.Handler;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.widget.TextView;
 
 public class LrcView extends TextView {
@@ -70,30 +71,41 @@ public class LrcView extends TextView {
 		if (mList == null || mList.size() == 0) {
 			return ;
 		}
-		mPaint.setTextAlign(Paint.Align.CENTER);
 		int size = mList.size();
-		Paint paint;
-//		int light = heightLightIndex();
+		int vWidth = getWidth();
+		int vHeight = getHeight();
+		float textW = 0;
 		int light = mLightIndex;
+		String text = null;
+		float lineLeft = getLayout().getLineLeft(0);
+		
 		for (int i = 0; i < size; i++) {
-//			paint = i == light ? mLightPaint : mPaint;
 			if (i != light) {
-				canvas.drawText(mList.get(i), getLayout().getLineLeft(0), getHeight()/2 + (i * 2) * mPaint.getTextSize() - mOffsetY, mPaint);
+				text = mList.get(i);
+				textW = mPaint.measureText(text);
+				float x = (vWidth - textW)/2;
+				float y = vHeight/2 + (i * 2) * mPaint.getTextSize() - mOffsetY;
+				canvas.drawText(text, lineLeft, y, mPaint);
 			}
 		}
 		
 		calcFloat();
 		
-		String text = mList.get(light);
-		float len = getTextSize() * text.length();
+		text = mList.get(light);
+		textW = mLightPaint.measureText(text);
+		float x = (vWidth - textW)/2;
+		float y = vHeight/2 + (light * 2) * mPaint.getTextSize() - mOffsetY;
+		
 		int[] a = new int[] { Color.YELLOW, Color.BLACK };
 		float[] f = new float[] { float1, float2 };
 		Shader shader = new LinearGradient(
-				(getWidth() - len)/2 , 0, 
-				(getWidth() - len)/2 + len, 0, 
+				x, 0, 
+				x + textW +10, 0, 
 				a, f, TileMode.CLAMP);
 		mLightPaint.setShader(shader);
-		canvas.drawText(mList.get(light), getLayout().getLineLeft(0), getHeight()/2 + (light * 2) * mPaint.getTextSize() - mOffsetY, mLightPaint);
+		String msg = String.format("vW:%d, vH:%d, textW:%f, (%f,%f)", vWidth, vHeight, textW, x, y);
+		Log.i(TAG, msg);
+		canvas.drawText(mList.get(light), lineLeft, y, mLightPaint);
 		
 		mOffsetY += mDy;
 		if (mOffsetY >= getHeight()/2 + mList.size() * mPaint.getTextSize()) {
@@ -130,33 +142,6 @@ public class LrcView extends TextView {
 		}
 	}
 	
-	/*
-	protected void onDraw(Canvas canvas) {
-		Paint paint = getPaint();
-		float1 += 0.01f;
-		float2 += 0.01f;
-		count++;
-		if (float2 > 1.0) {
-			float1 = 0.0f;
-			float2 = 0.01f;
-		}
-//		Paint paint = new Paint();
-		text = getText().toString();
-		// 获得字符串的"长度"
-		float len = getTextSize() * text.length();
-		// 参数color数组表示参与渐变的集合
-		// 参数float数组表示对应颜色渐变的位置
-		int[] a = new int[] { Color.YELLOW, Color.RED };
-		float[] f = new float[] { float1, float2 };
-		Shader shader = new LinearGradient(
-				getLayout().getLineLeft(0), 0, 
-				getLayout().getLineLeft(0) + len, 0, 
-				a, f, TileMode.CLAMP);
-		paint.setShader(shader);
-		super.onDraw(canvas);
-	}
-*/
-
 	private void update() {
 		// 更新界面
 		postInvalidate();
